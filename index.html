@@ -1,0 +1,99 @@
+
+
+<!DOCTYPE html>
+<script
+  src="https://code.jquery.com/jquery-3.5.1.min.js"
+  crossorigin="anonymous"></script><html lang="en">
+
+    <div class="container"> 
+        <div class="jumbotron">
+            <h1 class="display-4"> Transform Data</h1> 
+            <br/>            
+        </div>
+        <div id="app">
+        </div>
+    </div>
+<script>
+
+    $(()=>{
+    const items = [
+        { id: 2, seqId: 4, parent: 5, name: "index.tsx" },
+        { id: 3, seqId: 3, parent: 1, name: "Sidebar" },
+        { id: 4, seqId: 5, parent: 1, name: "Table" },
+        { id: 7, seqId: 5, parent: 5, name: "SelectableDropdown.tsx" },
+        { id: 5, seqId: 2, parent: 1, name: "AssignmentTable" },
+        { id: 1, seqId: 1, parent: null, name: "components" },
+       { id: 6, seqId: 2, parent: null, name: "controllers" }
+    ];
+    const result=transformItems(items);  
+    if(result)
+    {
+        result.forEach((data)=>{
+        $('#app').append(`<pre>${JSON.stringify(data)}<pre>`)       
+        })
+    }      
+});
+
+//group the items based on parent  and replace null with 0 for parent key
+const transformItems = (arr) => 
+{
+try{
+    const parent_id_map = {};
+    arr.forEach((a) => {
+        if (parent_id_map[a.parent || 0]) {
+            parent_id_map[a.parent || 0].push(a);
+        } else {
+            parent_id_map[a.parent || 0] = [a];
+        }
+    });
+
+    // let parentIds  = parent_id_map.map(function(v) {
+    //             return v.parent;
+    //             });
+    // var min = Math.min.apply( 0, parentIds );
+    // console.log(min)
+    
+ //sort the child element based on seqId
+   const childSort = (a, b) => {
+    if (a.seqId < b.seqId) {
+        return -1;
+    }
+    if (b.seqId > a.seqId) {
+        return 1;
+    }
+    return 0;
+}
+ 
+   // iterate over each group of parent to find the first element after sorting and 
+   //push into output array (with depth 0- first time)
+  //check for its child element based on id and if exist increment the depth by 1  
+  
+    const getChildArr = (parentId, depth, parent_id_map) => {     
+    const list = parent_id_map[parentId].sort((a, b) => {
+        return childSort(a,b) //sort
+      });
+      let newArr = [];
+      for (const i in list) {
+        list[i].depth = depth;
+        newArr.push(list[i]);
+        if (parent_id_map[list[i].id]) {
+          newArr = newArr.concat(
+              //call above step - getchildArr recursively for item
+            getChildArr(list[i].id, depth + 1, parent_id_map)
+          );
+        }
+      }
+      return newArr;
+    };
+
+   minParentId=parent_id_map.parent==null?0:parent_id_map.parent
+   minDepth=parent_id_map.depth?parent_id_map.depth:0;   
+   return getChildArr(minParentId, minDepth, parent_id_map);
+}
+catch(err)
+{
+console.log(err);
+}  
+}
+</script>
+</html>
